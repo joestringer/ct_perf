@@ -11,6 +11,14 @@ Connection tracking benchmark scripts and data for one test.
 - DUT has linux-4.0.5 vanilla from kernel.org installed.
 -- Configured as per Ubuntu 3.13 kernel.
 
+## Requirements
+
+For generating the graphs:
+
+* Python 2.7
+* gnuplot 4.6 patchlevel 6
+* make
+
 ## Data
 
 raw/ contains two sets of data for the same test:
@@ -31,3 +39,16 @@ raw/*ovsct* - OpenFlow flows to implement the same policy
 raw/nftmap - NFTables using maps
 raw/nftset - NFTables using sets
 raw/iptset - IPset
+
+## Generating graphs
+
+From root of git repository:
+
+$ make
+
+This will generate a variety of graphs using gnuplot and output an index.html
+which includes all of the graphs.
+
+For connection per sec, connections per sec per CPU %, higher is better.
+
+For CPU % (Bars on some graphs), lower is better.
