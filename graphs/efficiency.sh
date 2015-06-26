@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Author: Joe Stringer <joestringer@nicira.com>
+#
+# Generate the gnuplot script to turn the processed data into graphs.
 
 TYPE=_x # Alternatives: x - CPU %; c - kilocycles
 YLABEL="Connections per CPU %"

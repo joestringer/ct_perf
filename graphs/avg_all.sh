@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# Author: Joe Stringer <joestringer@nicira.com>
 
 AVG=graphs/avg.py
 SRC=raw/

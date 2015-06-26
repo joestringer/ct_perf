@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Author: Joe Stringer <joestringer@nicira.com>
+#
+# This script turns all of the raw output from the test scripts into shiny
+# graphs.
 
 OUTFILE=index.html
 

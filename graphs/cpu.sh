@@ -1,5 +1,7 @@
 #!/bin/bash
-
+#
+# Author: Joe Stringer <joestringer@nicira.com>
+#
 # For each *.txt file in $SRC that start with $PREFIX, grep for "System"
 # string and retrieve the CPU % from those files. Output in a better format.
 #

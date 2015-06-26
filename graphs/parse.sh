@@ -1,4 +1,6 @@
 #!/bin/sh
+#
+# Author: Joe Stringer <joestringer@nicira.com>
 
 FMT="csv"
 LABEL="cps"

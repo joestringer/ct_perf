@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Author: Joe Stringer <joestringer@nicira.com>
+#
+# Generate the gnuplot script to turn the processed data into graphs.
 
 TYPE=""
 OUTFILE=crr
@@ -90,27 +94,29 @@ parse_arg1()
     fi
 }
 
-if [ $# -gt 0 ]; then
-    echo $1 | grep -q 'h'
-    if [ $? -eq 0 ]; then
-        usage $@
-    fi
-    parse_arg1 $1
+main()
+{
+    if [ $# -gt 0 ]; then
+        echo $1 | grep -q 'h'
+        if [ $? -eq 0 ]; then
+            usage $@
+        fi
+        parse_arg1 $1
 
-    if [ $# -gt 1 ]; then
-        TYPE="_$2"
-        OUTFILE="${OUTFILE}_${2}"
+        if [ $# -gt 1 ]; then
+            TYPE="_$2"
+            OUTFILE="${OUTFILE}_${2}"
+        fi
+        if [ $# -gt 2 ]; then
+            OUTFILE="${OUTFILE}_${3}"
+        fi
+    else
+        CPU=0
+        STATS=" bridge ovsl2 ipset nfset nfmap ovsct ipt1k nft1k"
+        COLOURS=" 21 11 13 18 16 10 14 17"
     fi
-    if [ $# -gt 2 ]; then
-        OUTFILE="${OUTFILE}_${3}"
-    fi
-else
-    CPU=0
-    STATS=" bridge ovsl2 ipset nfset nfmap ovsct ipt1k nft1k"
-    COLOURS=" 21 11 13 18 16 10 14 17"
-fi
 
-cat << EOF > ${OUTFILE}.gnu
+    cat << EOF > ${OUTFILE}.gnu
 # Basic parameters
 set title 'TCP CRR performance against packet size'
 set ylabel 'Connection/s'
@@ -120,21 +126,21 @@ set term pngcairo size 1600,900 font 'Verdana,18'
 set key outside
 EOF
 
-if [ $CPU -eq 1 ]; then
-    cat << EOF >> ${OUTFILE}.gnu
+    if [ $CPU -eq 1 ]; then
+        cat << EOF >> ${OUTFILE}.gnu
 set y2label 'CPU %'
 set y2range [0:1600]
 set y2tics 100
 EOF
-elif [ $CPU -eq 2 ]; then
-    cat << EOF >> ${OUTFILE}.gnu
+    elif [ $CPU -eq 2 ]; then
+        cat << EOF >> ${OUTFILE}.gnu
 set y2label 'CPU cycles'
 set y2tics 1000000000
 #set y2tics 1000000
 EOF
-fi
+    fi
 
-cat << EOF >> ${OUTFILE}.gnu
+    cat << EOF >> ${OUTFILE}.gnu
 # Better colours
 set style line 1 linecolor rgb "#a6cee3" pt 1 ps 1 lt 1 lw 2 # --- light blue
 set style line 2 linecolor rgb "#1f78b4" pt 2 ps 1 lt 1 lw 2 # --- dark blue
@@ -189,34 +195,37 @@ set style fill solid border -1
 set key autotitle columnhead
 EOF
 
-for column in `seq 2 5`; do
-    cat << EOF >> ${OUTFILE}.gnu
+    for column in `seq 2 5`; do
+        cat << EOF >> ${OUTFILE}.gnu
 set output '${OUTFILE}_${column}.png'
 plot 'bridge_CRR.csv' every ::1 u 0:(0):xticlabel(1) w l ls 32 title '', \\
 EOF
-    FILECOUNT=`echo $STATS | wc -w`
-    if [ $CPU -ne 0 ]; then
+        FILECOUNT=`echo $STATS | wc -w`
+        if [ $CPU -ne 0 ]; then
+            for i in `seq 1 $FILECOUNT`; do
+                F=`echo $STATS | cut -d' ' -f $i`
+                C=`echo $COLOURS | cut -d' ' -f $i`
+                cat << EOF >> ${OUTFILE}.gnu
+    '${F}${TYPE}_CRR.txt' u $column ls $C axes x1y2, \\
+EOF
+            done
+        fi
         for i in `seq 1 $FILECOUNT`; do
             F=`echo $STATS | cut -d' ' -f $i`
             C=`echo $COLOURS | cut -d' ' -f $i`
-            cat << EOF >> ${OUTFILE}.gnu
-    '${F}${TYPE}_CRR.txt' u $column ls $C axes x1y2, \\
-EOF
-        done
-    fi
-    for i in `seq 1 $FILECOUNT`; do
-        F=`echo $STATS | cut -d' ' -f $i`
-        C=`echo $COLOURS | cut -d' ' -f $i`
-        if [ $i -eq $FILECOUNT ]; then
-            cat << EOF >> ${OUTFILE}.gnu
+            if [ $i -eq $FILECOUNT ]; then
+                cat << EOF >> ${OUTFILE}.gnu
     '${F}_CRR.csv' u $column with linespoints ls ${C}
 EOF
-        else
-            cat << EOF >> ${OUTFILE}.gnu
+            else
+                cat << EOF >> ${OUTFILE}.gnu
     '${F}_CRR.csv' u $column with linespoints ls ${C}, \\
 EOF
-        fi
+            fi
+        done
     done
-done
 
-gnuplot ${OUTFILE}.gnu
+    gnuplot ${OUTFILE}.gnu
+}
+
+main $@
