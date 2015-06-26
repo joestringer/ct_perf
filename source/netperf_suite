@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+# Derived from OpenStack testing scripts
+
+DST_IP=172.31.1.25
+N_TESTS=3
+TEST_LENGTH=30 # seconds
+
+export PATH=~joe/bin/:$PATH
+
+if [ $# -lt 1 ]; then
+    echo "usage: $0 <file_prefix> [n_tests]"
+    exit 1
+elif [ $# -ge 2 ]; then
+    N_TESTS=$2
+fi
+
+function run_test()
+{
+    TYPE=$1
+    SIZE_OPT=$2
+    FILE_PREFIX=$3
+    ITER=$4
+    NET_FILE=${FILE_PREFIX}_${TYPE}_${ITER}.csv
+    CPU_FILE=${FILE_PREFIX}_${TYPE}_${ITER}.txt
+
+    > $NET_FILE
+    echo "type, proto, cores, packet size, result" >> $NET_FILE
+
+#for PROTO in UDP TCP; do
+for PROTO in TCP; do
+    for THREADS in 1 4 8 16; do
+            for PACKET in 64 128 512 1024 9000 64000; do
+RES=$(super_netperf $THREADS -H $DST_IP  \
+    -l $TEST_LENGTH -t${PROTO}_$TYPE -- $SIZE_OPT $PACKET)
+        echo "$TYPE, $PROTO, $THREADS, $PACKET, $RES" >> $NET_FILE
+
+        done
+    done
+done
+}
+
+for i in `seq 1 $N_TESTS`; do
+    echo "Executing test $i/$N_TESTS"
+    #run_test STREAM -m $1 $i
+    #run_test RR -r $1 $i
+    run_test CRR -r $1 $i
+done
