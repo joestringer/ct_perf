@@ -1,0 +1,14 @@
+table ip filter {
+    map allowed {
+        type ipv4_addr : verdict;
+    }
+    chain forward {
+        type filter hook forward priority 0;
+        iif p2p1 ip protocol tcp ip saddr vmap @allowed
+        iif p2p1 ip saddr 172.31.1.35 ip protocol tcp accept
+        iif p2p2 ip protocol tcp ip saddr vmap @allowed
+        iif p2p2 ip saddr 172.31.1.27 ip protocol tcp accept
+        iif p3p1 ip protocol tcp ct state established|related accept
+        iif p3p1 ip protocol tcp drop
+    }
+}

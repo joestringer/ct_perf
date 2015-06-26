@@ -1,0 +1,7 @@
+*filter
+-A FORWARD -i p2p1 -p tcp -m set --match-set set1k src -j ACCEPT
+-A FORWARD -i p2p2 -p tcp -m set --match-set set1k src -j ACCEPT
+-A FORWARD -i p3p1 -p tcp -m conntrack --ctstate ESTABLISHED,RELATED -j  ACCEPT
+-A FORWARD -i p3p1 -p tcp  -j  DROP
+-A FORWARD  -m limit --limit 5/min -j LOG --log-prefix "iptables denied: " --log-level 7
+COMMIT
